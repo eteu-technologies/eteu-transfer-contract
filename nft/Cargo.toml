@@ -1,0 +1,16 @@
+[package]
+name = "eteu-transfer-contract-nft"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk.workspace = true
+near-contract-standards.workspace = true
+
+# TODO
+#[target.wasm32-unknown-unknown]
+#rustflags = ["-C", "link-args=-s"]
