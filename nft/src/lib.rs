@@ -104,6 +104,7 @@ impl Contract {
             .get(&token_id)
             .unwrap_or_else(|| env::panic_str("no such token"));
 
+        env::log_str(format!("{} == {}", owner_id, env::predecessor_account_id()).as_str());
         require!(owner_id == env::predecessor_account_id(), "not token owner");
 
         if let Some(m) = &mut self.tokens.next_approval_id_by_id {
