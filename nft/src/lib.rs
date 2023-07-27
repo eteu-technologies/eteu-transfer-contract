@@ -38,8 +38,6 @@ near_contract_standards::impl_non_fungible_token_enumeration!(Contract, tokens);
 impl Contract {
     #[init]
     pub fn new(owner_id: AccountId) -> Self {
-        assert!(!env::state_exists(), "Already initialized");
-
         let metadata = NFTContractMetadata {
             spec: NFT_METADATA_SPEC.into(),
             name: "eTEU Transfer".into(),
