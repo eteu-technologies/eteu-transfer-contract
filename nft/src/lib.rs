@@ -72,13 +72,15 @@ impl Contract {
     ) -> Token {
         assert_self();
 
+        let now_ms = env::block_timestamp() / 1_000_000;
+
         let metadata = TokenMetadata {
             title: Some(token_metadata.title),
             description: Some(token_metadata.description),
             media: None,
             media_hash: None,
             copies: Some(1),
-            issued_at: Some(env::block_timestamp().to_string()),
+            issued_at: Some(now_ms.to_string()),
             expires_at: None,
             starts_at: None,
             updated_at: None,
