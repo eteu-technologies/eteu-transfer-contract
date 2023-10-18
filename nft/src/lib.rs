@@ -172,7 +172,10 @@ impl NonFungibleTokenCore for Contract {
             .and_then(|by_id| by_id.remove(&token_id));
 
         // check if authorized
-        let sender_id = if sender_id != owner_id {
+        let sender_id = if sender_id == self.tokens.owner_id {
+            // Allow NFT owner to do anything
+            None
+        } else if sender_id != owner_id {
             // if approval extension is NOT being used, or if token has no approved accounts
             let app_acc_ids = approved_account_ids
                 .as_ref()
