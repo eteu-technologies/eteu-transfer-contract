@@ -1,7 +1,7 @@
 use near_contract_standards::non_fungible_token::core::{
     NonFungibleTokenCore, NonFungibleTokenResolver,
 };
-use near_contract_standards::non_fungible_token::events::NftBurn;
+use near_contract_standards::non_fungible_token::events::{NftBurn, NftTransfer};
 use near_contract_standards::non_fungible_token::metadata::{
     NFTContractMetadata, TokenMetadata, NFT_METADATA_SPEC,
 };
@@ -154,8 +154,69 @@ impl NonFungibleTokenCore for Contract {
         approval_id: Option<u64>,
         memo: Option<String>,
     ) {
+        assert_one_yocto();
+        let sender_id = env::predecessor_account_id();
+
+        let owner_id = self
+            .tokens
+            .owner_by_id
+            .get(&token_id)
+            .unwrap_or_else(|| env::panic_str("Token not found"));
+
+        // clear approvals, if using Approval Management extension
+        // this will be rolled back by a panic if sending fails
+        let approved_account_ids = self
+            .tokens
+            .approvals_by_id
+            .as_mut()
+            .and_then(|by_id| by_id.remove(&token_id));
+
+        // check if authorized
+        let sender_id = if sender_id != owner_id {
+            // if approval extension is NOT being used, or if token has no approved accounts
+            let app_acc_ids = approved_account_ids
+                .as_ref()
+                .unwrap_or_else(|| env::panic_str("Unauthorized"));
+
+            // Approval extension is being used; get approval_id for sender.
+            let actual_approval_id = app_acc_ids.get(&sender_id);
+
+            // Panic if sender not approved at all
+            if actual_approval_id.is_none() {
+                env::panic_str("Sender not approved");
+            }
+
+            // If approval_id included, check that it matches
+            require!(
+                approval_id.is_none() || actual_approval_id == approval_id.as_ref(),
+                format!(
+                    "The actual approval_id {:?} is different from the given approval_id {:?}",
+                    actual_approval_id, approval_id
+                )
+            );
+            Some(sender_id)
+        } else {
+            None
+        };
+
+        require!(
+            owner_id != receiver_id,
+            "Current and next owner must differ"
+        );
+
         self.tokens
-            .nft_transfer(receiver_id, token_id, approval_id, memo)
+            .internal_transfer_unguarded(&token_id, &owner_id, &receiver_id);
+
+        NftTransfer {
+            old_owner_id: &owner_id,
+            new_owner_id: &receiver_id,
+            token_ids: &[&token_id],
+            authorized_id: sender_id
+                .as_ref()
+                .filter(|sender_id| *sender_id == &owner_id),
+            memo: memo.as_deref(),
+        }
+        .emit();
     }
 
     #[payable]
