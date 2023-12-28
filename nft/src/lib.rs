@@ -10,7 +10,7 @@ use near_contract_standards::non_fungible_token::{Token, TokenId};
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::LazyOption;
 use near_sdk::{
-    assert_one_yocto, assert_self, env, near_bindgen, require, AccountId, BorshStorageKey,
+    assert_self, env, near_bindgen, require, AccountId, BorshStorageKey,
     PanicOnDefault, PromiseOrValue,
 };
 
@@ -98,8 +98,6 @@ impl Contract {
     /// Burns an existing NFT
     #[payable]
     pub fn nft_burn(&mut self, token_id: TokenId) {
-        assert_one_yocto();
-
         let owner_id = self
             .tokens
             .owner_by_id
@@ -154,7 +152,6 @@ impl NonFungibleTokenCore for Contract {
         approval_id: Option<u64>,
         memo: Option<String>,
     ) {
-        assert_one_yocto();
         let sender_id = env::predecessor_account_id();
 
         let owner_id = self
